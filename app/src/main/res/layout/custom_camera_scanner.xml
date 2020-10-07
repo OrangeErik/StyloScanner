@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <com.journeyapps.barcodescanner.DecoratedBarcodeView
+            android:id="@+id/barcode_view_custom_scan"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="match_parent"
+            android:layout_height="135dp"
+            app:zxing_scanner_layout="@layout/custom_barcode_layout"/>
+
+    <Button
+        android:id="@+id/btnScan_custom_scan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/scan"
+        app:layout_constraintRight_toRightOf="@id/barcode_view_custom_scan"
+        app:layout_constraintBottom_toBottomOf="@id/barcode_view_custom_scan"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

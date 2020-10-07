@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">StyloScanner</string>
+    <string name="title_activity_documents_list">DocumentsListActivity</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+
+    <string name="hint_word">Word...</string>
+    <string name="button_save">Save</string>
+    <string name="empty_not_saved">Document not saved because it is empty.</string>
+    <string name="scanning">scanning...</string>
+    <string name="result">Result:</string>
+    <string name="scan">Scan+</string>
+    <string name="elipsis">...</string>
+    <string name="authorities">ru.tutorial.qrcodescannerpapyrus.fileprovider</string>
+    <string name="new_document">Новый документ</string>
+    <string name="desciption_doc">Описание документа</string>
+    <string name="name_doc">Имя документа</string>
+    <string name="new_string">Новая строка</string>
+    <string name="count">Кол-во</string>
+    <string name="ok">OK</string>
+    <string name="code_input">Code input</string>
+    <string name="checkbox_output_dialog">Выводить этот диалог\n при сканировании</string>
+    <string name="use_camera">Использовать камеру\n (если нет сканера)</string>
+    <string name="load_goods_handbook">Загрузить справочник товаров</string>
+    <string name="delete">Delete</string>
+    <string name="copy">Copy</string>
+
+</resources>

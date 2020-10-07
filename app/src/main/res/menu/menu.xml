@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/load_goods_handbook_menuitem"
+        android:orderInCategory="100"
+        android:title="@string/load_goods_handbook"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_scan_setting"
+        android:title="@string/delete"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_settings_24"/>
+    <item
+        android:id="@+id/goods_handbook_menuitem"
+        android:orderInCategory="100"
+        android:title="@string/load_goods_handbook"
+        android:icon="@drawable/ic_list_24"
+        app:showAsAction="always"/>
+</menu>
