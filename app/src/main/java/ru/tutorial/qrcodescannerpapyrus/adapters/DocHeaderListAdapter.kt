@@ -1,5 +1,6 @@
 package ru.tutorial.qrcodescannerpapyrus.adapters
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -11,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.util.isNotEmpty
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.dialog_new_doc.view.*
@@ -18,6 +20,7 @@ import kotlinx.coroutines.Deferred
 import ru.tutorial.qrcodescannerpapyrus.*
 import ru.tutorial.qrcodescannerpapyrus.data.DocHeader
 import ru.tutorial.qrcodescannerpapyrus.util.Constants
+import ru.tutorial.qrcodescannerpapyrus.view.DocumentsListActivity
 import ru.tutorial.qrcodescannerpapyrus.view.StringListActivity
 import ru.tutorial.qrcodescannerpapyrus.viewmodels.DocHeaderViewModel
 import ru.tutorial.qrcodescannerpapyrus.viewmodels.HeaderViewData
@@ -74,11 +77,13 @@ class DocHeaderListAdapter internal constructor(context: Context, viewModelHandl
 			}
 		}
 	}
+
 	fun goToStrList(headerViewData:HeaderViewData) {
 		val intent = Intent(ctx, StringListActivity::class.java);
 		intent.putExtra("PARENT_ID", headerViewData.docHeader.headerId);
 		ctx.startActivity(intent);
 	}
+
 	//@select
 	var onItemClick: ((Int) -> Unit)? = null
 	var onItemLongClick: ((Int) -> Unit)? = null
@@ -97,29 +102,26 @@ class DocHeaderListAdapter internal constructor(context: Context, viewModelHandl
 
 	fun deleteDocs() {
 		val selected_list= docHeadersList.filter { it.selected };
-		this.docHeaderViewModel.deleteList(selected_list)
+		docHeaderViewModel.deleteList(selected_list)
 		notifyDataSetChanged()
 		currentSelectedPos = -1
 	}
 
 	fun expDocs():Deferred<String>{
 		val selected_list = docHeadersList.filter { it.selected };
-		return this.docHeaderViewModel.expDocs(selected_list);
+		return docHeaderViewModel.expDocs(selected_list);
 	}
 
 	inner class DocHeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 		val docHeaderNameView: TextView = itemView.findViewById(R.id.doc_header_name_tw);
 		val docHeaderDescrView: TextView = itemView.findViewById(R.id.doc_header_descr_tw);
 		val docHeaderStrCount:TextView = itemView.findViewById(R.id.doc_header_str_count)
-//		val scanStrListButton:ImageButton = itemView.findViewById(R.id.doc_header_add_str_btn);
-//		val scanStrListButton:CardView = itemView.findViewById(R.id.doc_header_card_view);
 		val editHeaderButton:ImageButton = itemView.findViewById(R.id.doc_header_edit_btn);
 
 		fun onBind(headerViewData:HeaderViewData) {
 			docHeaderNameView.text = headerViewData.docHeader.headerName;
 			docHeaderDescrView.text = headerViewData.docHeader.headerDescription;
 			docHeaderStrCount.text = "${Constants.str_str_count} ${headerViewData.docHeader.strCount}"
-//			scanStrListButton.setOnClickListener { goToStrList(headerViewData); }
 			editHeaderButton.setOnClickListener { editHeader(headerViewData); }
 
 			//@select{

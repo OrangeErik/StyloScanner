@@ -11,13 +11,16 @@ interface goods {
 
 class GoodsRepository(private val goodsDao: GoodsDao):goods {
 	override suspend fun loadGoods(data: Sequence<String>) {
-		data.forEach {
-			val data_list = it.split(";");
-			goodsDao.insert(GoodsEntity(data_list[0], data_list[1]));
+		goodsDao.deleteAll();
+		val list = data.toList();
+		for(i in 1..list.lastIndex) {
+			val data_list = list[i].split(";");
+			if(data_list.size == 2)
+				goodsDao.insert(GoodsEntity(data_list[0], data_list[1]));
 		}
 	}
 
 	override fun giveGoodsByBarcode(barcode: String): GoodsEntity {
-		TODO("Not yet implemented")
+		return goodsDao.getGoodByCode(barcode)
 	}
 }

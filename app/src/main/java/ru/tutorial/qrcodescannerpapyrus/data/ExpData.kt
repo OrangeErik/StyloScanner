@@ -11,7 +11,7 @@ data class ExpData(
 	fun toCSV(): String {
 		var outer:String = "${Constants.str_doc_name};${Constants.str_doc_descr};${Constants.str_code};${Constants.str_goods_count}\n";
 		for(i:Int in data.indices) {
-			outer += "$docName;$docDescr;${data[i].first};${data[i].second.toString()}\n"
+			outer += "$docName;${if(docDescr.length > 0) docDescr else " "};${data[i].first};${data[i].second.toString()}\n"
 		}
 		return outer;
 	}

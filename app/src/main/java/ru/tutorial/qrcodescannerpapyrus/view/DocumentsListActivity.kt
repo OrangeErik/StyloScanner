@@ -1,18 +1,21 @@
 package ru.tutorial.qrcodescannerpapyrus.view
 
+import android.Manifest
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.dialog_new_doc.view.*
@@ -24,6 +27,7 @@ import ru.tutorial.qrcodescannerpapyrus.R
 import ru.tutorial.qrcodescannerpapyrus.adapters.DocHeaderListAdapter
 import ru.tutorial.qrcodescannerpapyrus.data.DocHeader
 import ru.tutorial.qrcodescannerpapyrus.util.Constants
+import ru.tutorial.qrcodescannerpapyrus.util.bindViewModel
 import ru.tutorial.qrcodescannerpapyrus.viewmodels.DocHeaderViewModel
 import timber.log.Timber
 import java.io.File
@@ -31,10 +35,9 @@ import java.io.FileWriter
 
 class DocumentsListActivity : AppCompatActivity() {
 	companion object {
-		private const val TAKE_NEW_STRINGS = 1;
-		private const val TAKE_GOODS = 2;
-		private val newDocHeaderActivityRequestCode = 1;
-		private val listOfStringActivityRequestCode = 2;
+		private const val TAKE_GOODS_ActivityRequestCode = 2;
+		private const val cameraPermissionRequestCode = 3;
+		private const val SHARE_CSV_ActivityRequestCode = 4;
 	}
 
 	private lateinit var activityViewModel: ViewModel;
@@ -45,7 +48,7 @@ class DocumentsListActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_activity);
-		activityViewModel = ViewModelProvider(this).get(DocHeaderViewModel::class.java);
+		activityViewModel = bindViewModel(this, null, DocHeaderViewModel::class.java)
 		rvAdapter = DocHeaderListAdapter(this, activityViewModel as DocHeaderViewModel);
 		val inflater:LayoutInflater = LayoutInflater.from(this);
 		iMM = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
@@ -70,18 +73,27 @@ class DocumentsListActivity : AppCompatActivity() {
 
 				val alert_dlg = builder.show();
 				welcome_dialog.ok_button_scan_setting.setOnClickListener {
+					alert_dlg.dismiss();
 					use_camera = welcome_dialog.checkbox_have_scanner.isChecked;
 					val editor = edit();
-					editor.putBoolean(Constants.PREF_KEY_USE_CAMERA, use_camera);
+					if(use_camera) {
+						if (ContextCompat.checkSelfPermission(this@DocumentsListActivity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+							ActivityCompat.requestPermissions(this@DocumentsListActivity, arrayOf(Manifest.permission.CAMERA), cameraPermissionRequestCode)
+						}
+						editor.putBoolean(Constants.PREF_KEY_USE_CAMERA, true);
+					}
+					else {
+						editor.putBoolean(Constants.PREF_KEY_USE_CAMERA, false);
+					}
 					editor.apply();
-					alert_dlg.dismiss();
+
 				}
 			}
 		}
 
 		fab.setOnClickListener { view ->
-			val dialog_view = LayoutInflater.from(this).inflate(R.layout.dialog_new_doc, null)
-			val builder = AlertDialog.Builder(this).setView(dialog_view)
+			val dialog_view = LayoutInflater.from(this).inflate(R.layout.dialog_new_doc, null);
+			val builder = AlertDialog.Builder(this).setView(dialog_view);
 			val alert_dialog = builder.show();
 
 			fun inputComplete()
@@ -100,7 +112,7 @@ class DocumentsListActivity : AppCompatActivity() {
 
 			dialog_view.new_doc_descr_et.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
 				if (keyCode == KeyEvent.KEYCODE_ENTER) {
-					val view: View = alert_dialog.currentFocus!!;
+					val focus_view: View = alert_dialog.currentFocus!!;
 					iMM.hideSoftInputFromWindow(view.windowToken, 0)
 					inputComplete()
 				}
@@ -148,22 +160,21 @@ class DocumentsListActivity : AppCompatActivity() {
 				}
 			}
 			R.id.load_goods_handbook_menuitem -> {
-				runBlocking {
-					val intent = Intent()
-						.addCategory(Intent.CATEGORY_OPENABLE)
-						.setType("text/csv")
-						.setAction(Intent.ACTION_OPEN_DOCUMENT)
-
-					startActivityForResult(Intent.createChooser(intent, "Open CSV"), TAKE_GOODS);
-				}
+//				runBlocking {
+//					val intent = Intent()
+//						.addCategory(Intent.CATEGORY_OPENABLE)
+//						.setType("text/csv")
+//						.setAction(Intent.ACTION_OPEN_DOCUMENT)
+//
+//					startActivityForResult(Intent.createChooser(intent, "Open CSV"), TAKE_GOODS);
+//				}
 
 				GlobalScope.launch {
 					val intent = Intent()
 						.addCategory(Intent.CATEGORY_OPENABLE)
 						.setType("text/csv")
 						.setAction(Intent.ACTION_OPEN_DOCUMENT)
-
-					startActivityForResult(Intent.createChooser(intent, "Open CSV"), TAKE_GOODS);
+					startActivityForResult(Intent.createChooser(intent, "Open CSV"), TAKE_GOODS_ActivityRequestCode);
 				}
 			}
 		}
@@ -172,19 +183,27 @@ class DocumentsListActivity : AppCompatActivity() {
 
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 		super.onActivityResult(requestCode, resultCode, data)
-		if(requestCode == TAKE_GOODS && resultCode == RESULT_OK) {
+		if(requestCode == TAKE_GOODS_ActivityRequestCode && resultCode == RESULT_OK) {
 			val selectedFilename = data?.data //The uri with the location of the file
 			if (selectedFilename != null) {
-//				contentResolver.openInputStream(selectedFilename)?.bufferedReader()?.forEachLine {
-//					Timber.tag(javaClass.simpleName).i(it);
-//				}
-				val raw_goods_stream = contentResolver.openInputStream(selectedFilename)!!;
+				val raw_goods_stream = contentResolver.openInputStream(selectedFilename);
 				if(raw_goods_stream != null) {
 					(activityViewModel as DocHeaderViewModel).loadGoodsFromStream(raw_goods_stream);
 				}
 			} else {
-				val msg = "Null filename data received!"
-				Toast.makeText(applicationContext, msg, Toast.LENGTH_LONG).show()
+				Toast.makeText(applicationContext, "Null filename data received!", Toast.LENGTH_LONG)
+					.show()
+			}
+		}
+		else if(requestCode == SHARE_CSV_ActivityRequestCode && resultCode == RESULT_OK) {
+			val share_dir = File(filesDir, "export")
+			if(share_dir.exists()) {
+				val share_file = File(share_dir, "Scan_doc_list.csv");
+				if(share_file.exists()) {
+					share_file.delete();
+					Toast.makeText(applicationContext, "Data was exported!", Toast.LENGTH_SHORT)
+						.show()
+				}
 			}
 		}
 	}
@@ -202,13 +221,7 @@ class DocumentsListActivity : AppCompatActivity() {
 						mode?.finish()
 						return true
 					} else if (item?.itemId == R.id.action_doc_share) {
-						Toast.makeText(
-							this@DocumentsListActivity,
-							"TODO export",
-							Toast.LENGTH_LONG
-						);
-
-						runBlocking {
+						GlobalScope.launch {
 							val exp_data = rvAdapter.expDocs().await();
 							shareCsvData(exp_data);
 						}
@@ -246,28 +259,32 @@ class DocumentsListActivity : AppCompatActivity() {
 	}
 
 	// } @ERIK UPDATE
-	fun shareCsvData(csvData: String, docName: String = "Scan_doc_list") {
+	fun shareCsvData(csvData: String) {
 		val share_dir = File(filesDir, "export")
 		if(!share_dir.exists()) {
 			share_dir.mkdir();
 		}
-		val share_file = File(share_dir, "$docName.csv");
+		val share_file = File(share_dir, "Scan_doc_list.csv");
 		var file_writer: FileWriter? = null;
 		try {
 			file_writer = FileWriter(share_file);
-			file_writer.append(csvData);
+			file_writer.write(csvData)
 			file_writer.close();
 			val uri = FileProvider.getUriForFile(this, "ru.tutorial.qrcodescannerpapyrus.fileprovider", share_file);
-			val send_intent = Intent(Intent.ACTION_SEND);
-			send_intent.type = "text/csv"
-			send_intent.putExtra(Intent.EXTRA_STREAM, uri)
-			startActivity(send_intent)
+//			val send_intent = Intent(Intent.ACTION_SEND);
+			Intent(Intent.ACTION_SEND).apply {
+				type = "text/csv"
+				putExtra(Intent.EXTRA_STREAM, uri)
+				startActivityForResult(this, SHARE_CSV_ActivityRequestCode);
+			}
+
 		}catch (e: Exception) {
 			Timber.e("Writing CSV error!");
 			Timber.e(e);
 			e.printStackTrace();
-		}finally{
+			file_writer?.close();
 			share_file.delete();
+
 		}
 	}
 }

@@ -93,13 +93,9 @@ dependencies {
     implementation "com.rabbitmq:amqp-client:latest.release"
 
 
-
-
-
     //New Scanner
     // Use this dependency to bundle the model with your app
     implementation 'com.google.mlkit:barcode-scanning:16.0.3'
-
     // CameraX core library using the camera2 implementation
     def camerax_version = "1.0.0-beta10"
     implementation "androidx.camera:camera-camera2:${camerax_version}"

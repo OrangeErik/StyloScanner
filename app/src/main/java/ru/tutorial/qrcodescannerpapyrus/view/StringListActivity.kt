@@ -1,46 +1,52 @@
 package ru.tutorial.qrcodescannerpapyrus.view
-import android.animation.ArgbEvaluator
-import android.animation.ValueAnimator
 import android.app.AlertDialog
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Size
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.zxing.ResultPoint
 import com.google.zxing.client.android.BeepManager
-import com.journeyapps.barcodescanner.*
-import kotlinx.android.synthetic.main.custom_camera_scanner.*
+import kotlinx.android.synthetic.main.activity_barcode_scanning.*
 import kotlinx.android.synthetic.main.rv_strings.*
 import kotlinx.android.synthetic.main.dialog_new_string.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import ru.tutorial.qrcodescannerpapyrus.KtApplication
 import ru.tutorial.qrcodescannerpapyrus.R
 import ru.tutorial.qrcodescannerpapyrus.adapters.DocStringListAdapter
 import ru.tutorial.qrcodescannerpapyrus.data.DocString
+import ru.tutorial.qrcodescannerpapyrus.data.GoodsEntity
+import ru.tutorial.qrcodescannerpapyrus.data.MLKitBarcodeAnalyzer
+import ru.tutorial.qrcodescannerpapyrus.data.ScanningResultListener
 import ru.tutorial.qrcodescannerpapyrus.util.Constants
+import ru.tutorial.qrcodescannerpapyrus.util.bindViewModel
 import ru.tutorial.qrcodescannerpapyrus.viewmodels.DocHeaderViewModel
 import ru.tutorial.qrcodescannerpapyrus.viewmodels.DocStringViewModel
 import ru.tutorial.qrcodescannerpapyrus.viewmodels.DocStringViewModelFactory
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.Executors
 
 class StringListActivity: AppCompatActivity() {
 	private var parentId:Long = 0;
 	lateinit var adapter:DocStringListAdapter
 	private var actionMode: ActionMode? = null
 	private lateinit var activityViewModel: ViewModel;
-	private var captureManager: CaptureManager? = null;
 	lateinit var beepManager: BeepManager;
+	lateinit var inflater:LayoutInflater;
 	private var scanContinuousState: Boolean = false;
-	private lateinit var scanContinuousBG: Drawable;
 	private var lastScan = Date();
 	var useCamera:Boolean = false;
 	var itemCount:Int = 0;
@@ -48,21 +54,19 @@ class StringListActivity: AppCompatActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState);
-
 		//init variables
-		val inflater = LayoutInflater.from(this@StringListActivity);
-		useCamera = KtApplication.settings.getBoolean(Constants.PREF_KEY_USE_CAMERA, false);
 		setContentView(R.layout.rv_strings);
+		inflater = LayoutInflater.from(this@StringListActivity);
+		useCamera = KtApplication.settings.getBoolean(Constants.PREF_KEY_USE_CAMERA, false);
 		parentId = intent.getLongExtra("PARENT_ID", 0);
-		val docStringViewModelFactory = DocStringViewModelFactory(parentId);
-		activityViewModel = ViewModelProvider(this, docStringViewModelFactory).get(DocStringViewModel::class.java);
+		activityViewModel = bindViewModel(this, DocStringViewModelFactory(parentId), DocStringViewModel::class.java);
 		adapter = DocStringListAdapter(this, activityViewModel as DocStringViewModel);
 		iMM = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager;
 
 		//rv_setting
 		doc_custom_str_rv.adapter = adapter;
 		doc_custom_str_rv.layoutManager = LinearLayoutManager(this);
-		val doc_header_vm = ViewModelProvider(this@StringListActivity).get(DocHeaderViewModel::class.java);
+		val doc_header_vm = bindViewModel(this@StringListActivity, null, DocHeaderViewModel::class.java);
 		(activityViewModel as DocStringViewModel).allStrings.observe(this@StringListActivity, Observer { str ->
 			str.let {
 				adapter.setDocStrings(it);
@@ -70,7 +74,7 @@ class StringListActivity: AppCompatActivity() {
 					if(itemCount < adapter.itemCount)
 						doc_custom_str_rv.scrollToPosition(adapter.itemCount-1);
 					itemCount = adapter.itemCount;
-					doc_header_vm.updateStrSizeByHeaderId(parentId, it.size);
+					(doc_header_vm as DocHeaderViewModel).updateStrSizeByHeaderId(parentId, it.size);
 					count_tw_custom_str_rv.text = "${Constants.str_str_count} ${it.size}";
 				}
 			}
@@ -78,37 +82,18 @@ class StringListActivity: AppCompatActivity() {
 
 		//add scanners to activity
 		if(useCamera) {
-			initCameraBarcodeScanner(inflater, savedInstanceState);
+			addCameraBarcodeScanner()
 		}
-		addTxtBarcodeScanner(inflater);
-		setAdapterTouch(inflater);
-}
-
-	override fun onPause() {
-		super.onPause();
-		captureManager?.onPause();
-	}
-	override fun onResume() {
-		super.onResume();
-		captureManager?.onResume();
-	}
-	override fun onDestroy() {
-		super.onDestroy();
-		captureManager?.onDestroy();
+		addTxtBarcodeScanner();
+		setAdapterTouch();
 	}
 
-	private fun initCameraBarcodeScanner(inflater:LayoutInflater, savedInstanceState: Bundle?) {
-		captureManager = addCameraBarcodeScanner(inflater)
-		captureManager?.initializeFromIntent(intent, savedInstanceState);
-		beepManager = BeepManager(this);
-		beepManager.isVibrateEnabled = true;
-	}
-	private fun addTxtBarcodeScanner(inflater:LayoutInflater){
+	private fun addTxtBarcodeScanner(){
 		val txt_scanner = inflater.inflate(R.layout.text_view_scanner, null);
 		val editText = txt_scanner.findViewById<EditText>(R.id.txt_result_custom_str_scanner);
 		editText.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
 			if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-				strInput(inflater, editText.text.toString());
+				strInput(editText.text.toString());
 				editText.text.clear()
 			}
 			false
@@ -116,56 +101,40 @@ class StringListActivity: AppCompatActivity() {
 		fragment_container_custom_rv_str.addView(txt_scanner);
 	}
 
-	private fun addCameraBarcodeScanner(inflater:LayoutInflater):CaptureManager{
-		val camera_scanner = inflater.inflate(R.layout.custom_camera_scanner, null);
-		val barcode_view = camera_scanner.findViewById<DecoratedBarcodeView>(R.id.barcode_view_custom_scan)
-		val btn_scan = camera_scanner.findViewById<Button>(R.id.btnScan_custom_scan)
+	private fun addCameraBarcodeScanner(){
+		beepManager = BeepManager(this);
+		beepManager.isVibrateEnabled = true;
+		val camera_scanner = inflater.inflate(R.layout.activity_barcode_scanning, null);
+		val btn_scan = camera_scanner.findViewById<Button>(R.id.btnScan_custom_scan);
+		fragment_container_custom_rv_str.addView(camera_scanner);
+		val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+		val cameraProvider = cameraProviderFuture.get()
 
-		fun animateBackground(){
-			val colorFrom = resources.getColor(R.color.colorAccent);
-			val colorTo = resources.getColor(R.color.colorPrimary);
-			val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), colorFrom, colorTo);
-			colorAnimation.duration = 250; // milliseconds
-			colorAnimation.addUpdateListener { animator -> btn_scan.setBackgroundColor(
-				animator.animatedValue as Int
-			); }
-			colorAnimation.start();
-		}
+		//___CAMERA_SELECTOR
+		val cameraSelector: CameraSelector = CameraSelector.Builder()
+			.requireLensFacing(CameraSelector.LENS_FACING_BACK)
+			.build()
 
-		scanContinuousBG = btn_scan.background;
-		btn_scan.setOnClickListener(View.OnClickListener {
+		//___PREVIEW
+		val preview: Preview = Preview.Builder().build()
+		preview.setSurfaceProvider(cameraPreview.surfaceProvider)
+
+		//___Analysis
+		val imageAnalysis = createAnalysis();
+
+		btn_scan.setOnClickListener {
 			if (!scanContinuousState) {
 				scanContinuousState = !scanContinuousState;
-				btn_scan.setBackgroundColor(ContextCompat.getColor(InlineScanActivity@ this, R.color.colorPrimary));
-				btn_scan.text = getString(R.string.scanning);
-				barcode_view.decodeContinuous(object : BarcodeCallback {
-					override fun barcodeResult(result: BarcodeResult?) {
-						result?.let {
-							val current = Date();
-							val diff = current.time - lastScan.time;
-							if(diff >= 2000){
-								strInput(inflater, it.text)
-								lastScan = current;
-								if (beepManager.isVibrateEnabled)
-									beepManager.playBeepSoundAndVibrate();
-								else
-									beepManager.playBeepSound();
-								animateBackground();
-							}
-						}
-					}
-					override fun possibleResultPoints(resultPoints: MutableList<ResultPoint>?) {}
-				});
-			} else {
-				btn_scan.text = getString(R.string.scan);
-				scanContinuousState = !scanContinuousState;
-				btn_scan.background = scanContinuousBG;
-				barcode_view.barcodeView.stopDecoding();
-			}
-		});
+				cameraProviderFuture.addListener(Runnable {
+					//___BIND
+					cameraProvider?.bindToLifecycle(this, cameraSelector, imageAnalysis, preview)
+				}, ContextCompat.getMainExecutor(this))
 
-		fragment_container_custom_rv_str.addView(camera_scanner);
-		return CaptureManager(this@StringListActivity, barcode_view_custom_scan)
+			} else {
+				cameraProvider?.unbindAll()
+				scanContinuousState = !scanContinuousState;
+			}
+		}
 	}
 
 	private fun enableActionMode(position: Int) {
@@ -212,7 +181,8 @@ class StringListActivity: AppCompatActivity() {
 			actionMode?.invalidate()
 		}
 	}
-	private fun strInput(inflater:LayoutInflater, newStr:String) {
+
+	private fun strInput(newStr:String) {
 		if(parentId.toInt() != 0) {
 			var to_open_dialog: Boolean = true
 			if (KtApplication.settings.contains(Constants.PREF_KEY_OPEN_NEW_STR_DIALOG)) {
@@ -220,7 +190,7 @@ class StringListActivity: AppCompatActivity() {
 			}
 
 			if (to_open_dialog) {
-				newStrInputDialog(inflater, newStr)
+				strInputDialog(newStr)
 			} else {
 				val new_string = newStr.trim();
 				if (new_string.isNotEmpty()) {
@@ -231,14 +201,14 @@ class StringListActivity: AppCompatActivity() {
 			Toast.makeText(this@StringListActivity, "Parent_id error", Toast.LENGTH_SHORT).show();
 		}
 	}
-	private fun updateStr(inflater:LayoutInflater, docString:DocString) {
+
+	private fun updateStr(docString:DocString) {
 		var to_open_dialog = KtApplication.settings.getBoolean(Constants.PREF_KEY_OPEN_NEW_STR_DIALOG, true)
 		val updated_string = docString
 		val dialog_view = inflater.inflate(R.layout.dialog_new_string, null)
 		dialog_view.new_string_goods_count_et.text.append(updated_string.goodsCount.toString());
 		dialog_view.new_string_tv.text = updated_string.docString;
 		dialog_view.checkbox_output_dialog_new_string.isChecked = to_open_dialog;
-
 		val builder = AlertDialog.Builder(this@StringListActivity).setView(dialog_view)
 		val alert_dialog = builder.show();
 		dialog_view.ok_button_new_string.setOnClickListener {
@@ -253,13 +223,24 @@ class StringListActivity: AppCompatActivity() {
 			alert_dialog.dismiss();
 		}
 	}
-	private fun newStrInputDialog(inflater:LayoutInflater, newStr:String) {
+
+	private fun strInputDialog(newStr:String) {
 		var to_open_dialog: Boolean = KtApplication.settings.getBoolean(Constants.PREF_KEY_OPEN_NEW_STR_DIALOG, true)
 		val new_string = newStr.trim();
 		val dialog_view = inflater.inflate(R.layout.dialog_new_string, null);
 		dialog_view.new_string_goods_count_et.text.append("1");
 		dialog_view.new_string_tv.text = new_string;
 		dialog_view.checkbox_output_dialog_new_string.isChecked = to_open_dialog;
+
+		//__Goods data from DB__
+		GlobalScope.launch(Dispatchers.Main) {
+			val goods: GoodsEntity? = (activityViewModel as DocStringViewModel).takeGoods(newStr).await()
+			if(goods!= null) {
+				if(goods.goodsName.isNotEmpty()) {
+					dialog_view.new_string_name_tv.text = goods.goodsName
+				}
+			}
+		}
 
 		val builder = AlertDialog.Builder(this@StringListActivity).setView(dialog_view)
 		val alert_dialog = builder.show();
@@ -289,18 +270,56 @@ class StringListActivity: AppCompatActivity() {
 		dialog_view.ok_button_new_string.setOnClickListener {
 			completeScan()
 		}
-
-
 	}
-	private fun setAdapterTouch(inflater:LayoutInflater) {
-		adapter.onItemClick = {
-			enableActionMode(it)
+
+	private fun setAdapterTouch() {
+		adapter.apply {
+			onItemClick = { enableActionMode(it) }
+			onItemLongClick = { enableActionMode(it) }
+			onEditItemClick = { updateStr(it); }
 		}
-		adapter.onItemLongClick = {
-			enableActionMode(it)
+	}
+
+	fun createAnalysis():ImageAnalysis {
+		var cameraExecutor = Executors.newSingleThreadExecutor()
+		val imageAnalysis = ImageAnalysis.Builder()
+			.setTargetResolution(Size(1280, 720))
+			.setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+			.build()
+
+		val orientationEventListener = object : OrientationEventListener(this as Context) {
+			override fun onOrientationChanged(orientation: Int) {
+				// Monitors orientation values to determine the target rotation value
+				val rotation: Int = when (orientation) {
+					in 45..134 -> Surface.ROTATION_270
+					in 135..224 -> Surface.ROTATION_180
+					in 225..314 -> Surface.ROTATION_90
+					else -> Surface.ROTATION_0
+				}
+				imageAnalysis.targetRotation = rotation
+			}
 		}
-		adapter.onEditItemClick = {
-			updateStr(inflater, it);
+		orientationEventListener.enable()
+
+		val listener= object: ScanningResultListener {
+			override fun onScanned(result: String) {
+				result?.let {
+					val current = Date();
+					val diff = current.time - lastScan.time;
+					if(diff >= 2000){
+						strInput(it)
+						lastScan = current;
+						if (beepManager.isVibrateEnabled)
+							beepManager.playBeepSoundAndVibrate();
+						else
+							beepManager.playBeepSound();
+					}
+				}
+			}
 		}
+
+		var analyzer: ImageAnalysis.Analyzer = MLKitBarcodeAnalyzer(listener);
+		imageAnalysis.setAnalyzer(cameraExecutor, analyzer)
+		return imageAnalysis;
 	}
 }

@@ -6,8 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    tools:showIn="@layout/main_activity">
+    android:layout_height="wrap_content">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -19,10 +18,9 @@
             android:id="@+id/doc_header_ll"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginEnd="12dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/doc_header_edit_btn"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -74,15 +72,6 @@
 
         </LinearLayout>
 
-<!--        <ImageButton-->
-<!--            android:id="@+id/doc_header_add_str_btn"-->
-<!--            android:layout_width="40dp"-->
-<!--            android:layout_height="40dp"-->
-<!--            android:src="@drawable/ic_list_24"-->
-<!--            app:layout_constraintBottom_toBottomOf="@+id/doc_header_ll"-->
-<!--            app:layout_constraintEnd_toStartOf="@+id/doc_header_edit_btn"-->
-<!--            app:layout_constraintTop_toTopOf="@+id/doc_header_ll" />-->
-
         <ImageButton
             android:id="@+id/doc_header_edit_btn"
             android:layout_width="40dp"
@@ -90,7 +79,20 @@
             android:src="@drawable/ic_edit_24"
             app:layout_constraintBottom_toBottomOf="@+id/doc_header_ll"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/doc_header_ll"
             app:layout_constraintTop_toTopOf="@+id/doc_header_ll" />
+
+        <!--        <ImageButton-->
+        <!--            android:id="@+id/test_scanner_btn"-->
+        <!--            android:layout_width="40dp"-->
+        <!--            android:layout_height="40dp"-->
+        <!--            android:src="@drawable/ic_list_24"-->
+        <!--            app:layout_constraintBottom_toBottomOf="@+id/doc_header_ll"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintHorizontal_bias="0.5"-->
+        <!--            app:layout_constraintStart_toEndOf="@+id/doc_header_ll"-->
+        <!--            app:layout_constraintTop_toTopOf="@+id/doc_header_ll" />-->
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -78,6 +78,13 @@ interface GoodsDao {
 	@Transaction
 	@Query("DELETE FROM goods WHERE goods_id = :id")
 	fun deleteStr(id:Long);
+
+	@Transaction
+	@Query("DELETE FROM goods")
+	suspend fun deleteAll();
+
+	@Query("Select * FROM goods WHERE barcode = :code")
+	fun getGoodByCode(code:String):GoodsEntity
 }
 
 @Dao
