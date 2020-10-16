@@ -1,5 +1,6 @@
 package ru.tutorial.qrcodescannerpapyrus.view
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.util.Size
@@ -18,6 +19,8 @@ import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.zxing.client.android.BeepManager
 import kotlinx.android.synthetic.main.activity_barcode_scanning.*
+import kotlinx.android.synthetic.main.dialog_new_doc.*
+import kotlinx.android.synthetic.main.dialog_new_string.*
 import kotlinx.android.synthetic.main.rv_strings.*
 import kotlinx.android.synthetic.main.dialog_new_string.view.*
 import kotlinx.coroutines.Dispatchers
@@ -67,16 +70,17 @@ class StringListActivity: AppCompatActivity() {
 		doc_custom_str_rv.adapter = adapter;
 		doc_custom_str_rv.layoutManager = LinearLayoutManager(this);
 		val doc_header_vm = bindViewModel(this@StringListActivity, null, DocHeaderViewModel::class.java);
-		(activityViewModel as DocStringViewModel).allStrings.observe(this@StringListActivity, Observer { str ->
-			str.let {
+		(activityViewModel as DocStringViewModel).allStrings.observe(this@StringListActivity, Observer { strings ->
+			strings.let {
 				adapter.setDocStrings(it);
 				if(itemCount != adapter.itemCount){
 					if(itemCount < adapter.itemCount)
 						doc_custom_str_rv.scrollToPosition(adapter.itemCount-1);
 					itemCount = adapter.itemCount;
 					(doc_header_vm as DocHeaderViewModel).updateStrSizeByHeaderId(parentId, it.size);
-					count_tw_custom_str_rv.text = "${Constants.str_str_count} ${it.size}";
+					strcount_tw.text = "${Constants.str_str_count} ${it.size}";
 				}
+				goodscount_tw.text = "${Constants.str_goods_count} ${it.map{ str -> str.goodsCount}.sum()}"
 			}
 		})
 
@@ -205,12 +209,11 @@ class StringListActivity: AppCompatActivity() {
 	private fun updateStr(docString:DocString) {
 		var to_open_dialog = KtApplication.settings.getBoolean(Constants.PREF_KEY_OPEN_NEW_STR_DIALOG, true)
 		val updated_string = docString
-		val dialog_view = inflater.inflate(R.layout.dialog_new_string, null)
+		val dialog_view = Dialog(this@StringListActivity, R.style.DialogTheme);
+		dialog_view.setContentView(R.layout.dialog_new_string);
 		dialog_view.new_string_goods_count_et.text.append(updated_string.goodsCount.toString());
 		dialog_view.new_string_tv.text = updated_string.docString;
 		dialog_view.checkbox_output_dialog_new_string.isChecked = to_open_dialog;
-		val builder = AlertDialog.Builder(this@StringListActivity).setView(dialog_view)
-		val alert_dialog = builder.show();
 		dialog_view.ok_button_new_string.setOnClickListener {
 			updated_string.goodsCount = dialog_view.new_string_goods_count_et.text.toString().toLong();
 			(activityViewModel as DocStringViewModel).updateString(updated_string);
@@ -220,14 +223,16 @@ class StringListActivity: AppCompatActivity() {
 				editor.putBoolean(Constants.PREF_KEY_OPEN_NEW_STR_DIALOG, to_open_dialog);
 				editor.apply();
 			}
-			alert_dialog.dismiss();
+			dialog_view.dismiss();
 		}
+		dialog_view.show();
 	}
 
 	private fun strInputDialog(newStr:String) {
 		var to_open_dialog: Boolean = KtApplication.settings.getBoolean(Constants.PREF_KEY_OPEN_NEW_STR_DIALOG, true)
 		val new_string = newStr.trim();
-		val dialog_view = inflater.inflate(R.layout.dialog_new_string, null);
+		val dialog_view = Dialog(this@StringListActivity, R.style.DialogTheme);
+		dialog_view.setContentView(R.layout.dialog_new_string);
 		dialog_view.new_string_goods_count_et.text.append("1");
 		dialog_view.new_string_tv.text = new_string;
 		dialog_view.checkbox_output_dialog_new_string.isChecked = to_open_dialog;
@@ -241,12 +246,8 @@ class StringListActivity: AppCompatActivity() {
 				}
 			}
 		}
-
-		val builder = AlertDialog.Builder(this@StringListActivity).setView(dialog_view)
-		val alert_dialog = builder.show();
-
 		fun completeScan() {
-			alert_dialog.dismiss();
+			dialog_view.dismiss();
 			val count = dialog_view.new_string_goods_count_et.text.toString().toLong();
 			if(new_string.isNotEmpty())
 				(activityViewModel as DocStringViewModel).insert(DocString(new_string, parentId, 0, count));
@@ -257,19 +258,18 @@ class StringListActivity: AppCompatActivity() {
 				editor.apply();
 			}
 		}
-
 		dialog_view.new_string_goods_count_et.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
 			if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-				val view:View = alert_dialog.currentFocus!!;
+				val view:View = dialog_view.currentFocus!!;
 				iMM.hideSoftInputFromWindow(view.windowToken, 0)
 				completeScan()
 			}
 			false
 		});
-
 		dialog_view.ok_button_new_string.setOnClickListener {
 			completeScan()
 		}
+		dialog_view.show();
 	}
 
 	private fun setAdapterTouch() {

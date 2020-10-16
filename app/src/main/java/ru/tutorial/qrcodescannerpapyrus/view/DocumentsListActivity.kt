@@ -2,6 +2,7 @@ package ru.tutorial.qrcodescannerpapyrus.view
 
 import android.Manifest
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,6 +19,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.android.synthetic.main.dialog_new_doc.*
 import kotlinx.android.synthetic.main.dialog_new_doc.view.*
 import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.android.synthetic.main.scan_setting_dialog.view.*
@@ -92,13 +94,16 @@ class DocumentsListActivity : AppCompatActivity() {
 		}
 
 		fab.setOnClickListener { view ->
-			val dialog_view = LayoutInflater.from(this).inflate(R.layout.dialog_new_doc, null);
-			val builder = AlertDialog.Builder(this).setView(dialog_view);
-			val alert_dialog = builder.show();
+//			val dialog_view = LayoutInflater.from(this).inflate(R.layout.dialog_new_doc, null);
+//			val builder = AlertDialog.Builder(this).setView(dialog_view);
+//			val alert_dialog = builder.show();
+
+			val dialog_view = Dialog(this, R.style.DialogTheme);
+			dialog_view.setContentView(R.layout.dialog_new_doc);
 
 			fun inputComplete()
 			{
-				alert_dialog.dismiss();
+				dialog_view.dismiss();
 				val doc_name = dialog_view.new_doc_name_et.text.toString();
 				val doc_descr = dialog_view.new_doc_descr_et.text.toString();
 				if(doc_name.isNotEmpty()) {
@@ -112,7 +117,7 @@ class DocumentsListActivity : AppCompatActivity() {
 
 			dialog_view.new_doc_descr_et.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
 				if (keyCode == KeyEvent.KEYCODE_ENTER) {
-					val focus_view: View = alert_dialog.currentFocus!!;
+					val focus_view: View = dialog_view.currentFocus!!;
 					iMM.hideSoftInputFromWindow(view.windowToken, 0)
 					inputComplete()
 				}
@@ -122,6 +127,7 @@ class DocumentsListActivity : AppCompatActivity() {
 			dialog_view.ok_button_new_doc.setOnClickListener {
 				inputComplete();
 			}
+			dialog_view.show()
 		}
 
 		//@ERIK UPDATE {

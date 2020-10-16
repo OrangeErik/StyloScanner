@@ -2,11 +2,13 @@ package ru.tutorial.qrcodescannerpapyrus.adapters
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.SparseBooleanArray
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +17,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.util.isNotEmpty
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.dialog_new_doc.*
 import kotlinx.android.synthetic.main.dialog_new_doc.view.*
 import kotlinx.coroutines.Deferred
 import ru.tutorial.qrcodescannerpapyrus.*
@@ -57,17 +60,16 @@ class DocHeaderListAdapter internal constructor(context: Context, viewModelHandl
 	//TODO
 	fun editHeader(headerViewData:HeaderViewData) {
 		val mutable_doc_header = headerViewData.docHeader
-		val dialog_view = LayoutInflater.from(ctx).inflate(R.layout.dialog_new_doc, null)
-		dialog_view.new_doc_tw.text = "Редактирование документа";
-		dialog_view.new_doc_name_et.append(mutable_doc_header.headerName)
-		dialog_view.new_doc_descr_et.append(mutable_doc_header.headerDescription)
-		val builder = AlertDialog.Builder(ctx).setView(dialog_view)
-		val alert_dialog = builder.show();
+		val editDialog = Dialog(ctx, R.style.DialogTheme);
+		editDialog.setContentView(R.layout.dialog_new_doc);
+		editDialog.new_doc_tw.text = "Редактирование документа";
+		editDialog.new_doc_name_et.append(mutable_doc_header.headerName)
+		editDialog.new_doc_descr_et.append(mutable_doc_header.headerDescription)
 
-		dialog_view.ok_button_new_doc.setOnClickListener {
-			alert_dialog.dismiss();
-			val doc_name = dialog_view.new_doc_name_et.text.toString();
-			val doc_descr = dialog_view.new_doc_descr_et.text.toString();
+		fun dialogCompleted() {
+			editDialog.dismiss();
+			val doc_name = editDialog.new_doc_name_et.text.toString();
+			val doc_descr = editDialog.new_doc_descr_et.text.toString();
 			if(doc_name.isNotEmpty()) {
 				if(doc_name != mutable_doc_header.headerName)
 					mutable_doc_header.headerName = doc_name;
@@ -76,6 +78,16 @@ class DocHeaderListAdapter internal constructor(context: Context, viewModelHandl
 				docHeaderViewModel.update(mutable_doc_header);
 			}
 		}
+		editDialog.new_doc_descr_et.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
+			if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+				dialogCompleted();
+			}
+			false
+		});
+		editDialog.ok_button_new_doc.setOnClickListener {
+			dialogCompleted();
+		}
+		editDialog.show();
 	}
 
 	fun goToStrList(headerViewData:HeaderViewData) {

@@ -1,7 +1,25 @@
 package ru.tutorial.qrcodescannerpapyrus
 
 import com.rabbitmq.client.*
-import ru.tutorial.qrcodescannerpapyrus.util.RabbitConst
+
+object RabbitConst {
+	val STANDART_HOST = "localhost";
+	val STANDART_PORT = "5672";
+	val QUEUE_NAME:String = "new_durable_queue";
+	var QUEUE_DURABLE = true;
+
+	//Publish/Subscribe
+	val PS_EXCHANGE_NAME = "logs";
+	val PS_EXCHANGE_TYPE = "fanout";
+
+	//Routing
+	val R_EXCHANGE_NAME = "RoutingLogs";
+	val R_EXCHANGE_TYPE = "direct";
+
+	//Topic
+	val T_EXCHANGE_NAME = "TopicsLogs";
+	val T_EXCHANGE_TYPE = "topic";
+}
 
 //Routing Producer and main fun
 class RoutingProducer(
@@ -39,7 +57,7 @@ class RoutingProducer(
 //			else {
 //				println("Введите тег лога:");
 //				logTag_RoutingKey = scanner.nextLine();
-//				channel.basicPublish(ru.tutorial.qrcodescannerpapyrus.util.RabbitConst.R_EXCHANGE_NAME, logTag_RoutingKey.toUpperCase(), null, message.toByteArray());
+//				channel.basicPublish(RabbitConst.R_EXCHANGE_NAME, logTag_RoutingKey.toUpperCase(), null, message.toByteArray());
 //				println(" [producer] Sent '$message'");
 //			}
 //		}
