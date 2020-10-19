@@ -30,7 +30,7 @@
             android:name=".view.StringListActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:windowSoftInputMode="stateHidden"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".view.DocumentsListActivity"
             android:screenOrientation="portrait">

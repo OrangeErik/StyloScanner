@@ -8,7 +8,7 @@
         app:showAsAction="never"/>
     <item
         android:id="@+id/action_scan_setting"
-        android:title="@string/delete"
+        android:title="@string/setting"
         app:showAsAction="always"
         android:icon="@drawable/ic_settings_24"/>
 </menu>

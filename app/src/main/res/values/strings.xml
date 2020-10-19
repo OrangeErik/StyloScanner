@@ -30,5 +30,6 @@
     <string name="load_goods_handbook">Загрузить справочник товаров</string>
     <string name="delete">Delete</string>
     <string name="copy">Copy</string>
+    <string name="setting">Setting</string>
 
 </resources>

@@ -64,44 +64,30 @@ interface DocStringDao {
 @Dao
 interface GoodsDao {
 	@Transaction
-	@Query("SELECT * FROM goods")
-	fun getAll():LiveData<List<GoodsEntity>>
+	@Insert
+	suspend fun insertGoods(vararg goodsEntity:GoodsEntity)
 
 	@Transaction
 	@Insert
-	suspend fun insert(vararg goodsEntity:GoodsEntity)
+	suspend fun insertBarcodes(vararg goodsBarcodeEntity: GoodsBarcodeEntity)
 
 	@Transaction
-	@Update
-	suspend fun update(vararg goodsEntity:GoodsEntity)
+	@Query("SELECT * FROM goods")
+	suspend fun getGoodsAndBarcodes():List<GoodsWithBarcodes>
 
 	@Transaction
-	@Query("DELETE FROM goods WHERE goods_id = :id")
-	fun deleteStr(id:Long);
+	@Query("SELECT goods_id FROM goods_barcodes WHERE barcode= :code")
+	suspend fun getGoodsIdByBarcode(code:String):String
+
+	@Transaction
+	@Query("SELECT goods_name FROM goods WHERE goods_id = :id")
+	suspend fun getGoodsNameById(id:String):String
 
 	@Transaction
 	@Query("DELETE FROM goods")
-	suspend fun deleteAll();
-
-	@Query("Select * FROM goods WHERE barcode = :code")
-	fun getGoodByCode(code:String):GoodsEntity
-}
-
-@Dao
-interface GoodsBarcodesDao {
-	@Transaction
-	@Query("SELECT * FROM goods_barcodes")
-	fun getAll():LiveData<List<GoodsBarcodeEntity>>
+	suspend fun deleteAllGoods();
 
 	@Transaction
-	@Insert
-	suspend fun insert(vararg goodsBarcode:GoodsBarcodeEntity)
-
-	@Transaction
-	@Update
-	suspend fun update(vararg v:GoodsEntity)
-
-	@Transaction
-	@Query("DELETE FROM goods_barcodes WHERE goods_id = :id")
-	fun deleteStr(id:Long);
+	@Query("DELETE FROM goods_barcodes")
+	suspend fun deleteAllBarcodes();
 }

@@ -9,9 +9,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import ru.tutorial.qrcodescannerpapyrus.KtApplication
 import ru.tutorial.qrcodescannerpapyrus.data.DocString
-import ru.tutorial.qrcodescannerpapyrus.repo.DataFormat
-import ru.tutorial.qrcodescannerpapyrus.repo.ExpDirection
-import ru.tutorial.qrcodescannerpapyrus.repo.ExportParam
 import ru.tutorial.qrcodescannerpapyrus.repo.MainRepository
 
 data class DocStringViewData(var docString: DocString, var selected:Boolean)
@@ -45,7 +42,10 @@ class DocStringViewModel(parentId:Long): ViewModel() {
 		repository.docStringRepo.deleteList(idList);
 	}
 
+
+	//TODO доделать
 	fun takeGoods(goodsCode:String) = viewModelScope.async(Dispatchers.IO) {
-		repository.goodsRepo.giveGoodsByBarcode(goodsCode)
+		repository.goodsRepo.getGoodsNameByBarcode(goodsCode)
+//		GoodsEntity(goodsId = "new", goodsName = "hello"); //@ЗАГЛУШКА
 	}
 }

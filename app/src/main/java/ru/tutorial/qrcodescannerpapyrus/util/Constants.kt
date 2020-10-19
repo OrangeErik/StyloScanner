@@ -1,6 +1,8 @@
 package ru.tutorial.qrcodescannerpapyrus.util
 
 object Constants {
+	const val goods_id:String  = "Goods_id"
+	const val goods_name: String = "Goods_name"
 	const val str_str_count:String = "Count:"
 	const val str_goods_count:String = "Qtty:"
 	const val str_doc_name:String = "doc_name"

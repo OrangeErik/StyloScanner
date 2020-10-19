@@ -1,5 +1,4 @@
 package ru.tutorial.qrcodescannerpapyrus.view
-import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
@@ -19,13 +18,12 @@ import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.zxing.client.android.BeepManager
 import kotlinx.android.synthetic.main.activity_barcode_scanning.*
-import kotlinx.android.synthetic.main.dialog_new_doc.*
 import kotlinx.android.synthetic.main.dialog_new_string.*
 import kotlinx.android.synthetic.main.rv_strings.*
-import kotlinx.android.synthetic.main.dialog_new_string.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import ru.tutorial.qrcodescannerpapyrus.KtApplication
 import ru.tutorial.qrcodescannerpapyrus.R
 import ru.tutorial.qrcodescannerpapyrus.adapters.DocStringListAdapter
@@ -228,7 +226,7 @@ class StringListActivity: AppCompatActivity() {
 		dialog_view.show();
 	}
 
-	private fun strInputDialog(newStr:String) {
+	private fun strInputDialog(newStr:String)  = runBlocking{
 		var to_open_dialog: Boolean = KtApplication.settings.getBoolean(Constants.PREF_KEY_OPEN_NEW_STR_DIALOG, true)
 		val new_string = newStr.trim();
 		val dialog_view = Dialog(this@StringListActivity, R.style.DialogTheme);
@@ -239,13 +237,14 @@ class StringListActivity: AppCompatActivity() {
 
 		//__Goods data from DB__
 		GlobalScope.launch(Dispatchers.Main) {
-			val goods: GoodsEntity? = (activityViewModel as DocStringViewModel).takeGoods(newStr).await()
-			if(goods!= null) {
-				if(goods.goodsName.isNotEmpty()) {
-					dialog_view.new_string_name_tv.text = goods.goodsName
+			val goods_name: String? = (activityViewModel as DocStringViewModel).takeGoods(newStr).await()
+			if(goods_name!= null) {
+				if(goods_name.isNotEmpty()) {
+					dialog_view.new_string_name_tv.text = goods_name
 				}
 			}
 		}
+
 		fun completeScan() {
 			dialog_view.dismiss();
 			val count = dialog_view.new_string_goods_count_et.text.toString().toLong();

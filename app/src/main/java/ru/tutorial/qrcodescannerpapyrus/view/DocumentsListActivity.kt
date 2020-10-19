@@ -94,10 +94,6 @@ class DocumentsListActivity : AppCompatActivity() {
 		}
 
 		fab.setOnClickListener { view ->
-//			val dialog_view = LayoutInflater.from(this).inflate(R.layout.dialog_new_doc, null);
-//			val builder = AlertDialog.Builder(this).setView(dialog_view);
-//			val alert_dialog = builder.show();
-
 			val dialog_view = Dialog(this, R.style.DialogTheme);
 			dialog_view.setContentView(R.layout.dialog_new_doc);
 
