@@ -155,6 +155,11 @@ class DocumentsListActivity : AppCompatActivity() {
 					welcome_dialog.ok_button_scan_setting.setOnClickListener {
 						use_camera = welcome_dialog.checkbox_have_scanner.isChecked;
 						val editor = setting.edit();
+						if(use_camera) {
+							if (ContextCompat.checkSelfPermission(this@DocumentsListActivity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+								ActivityCompat.requestPermissions(this@DocumentsListActivity, arrayOf(Manifest.permission.CAMERA), cameraPermissionRequestCode)
+							}
+						}
 						editor.putBoolean(Constants.PREF_KEY_USE_CAMERA, use_camera);
 						editor.apply();
 						alert_dlg.dismiss();

@@ -11,7 +11,7 @@ import androidx.room.RoomDatabase
 		(DocString::class),
 		(GoodsBarcodeEntity::class)
 	],
-	version = 2,
+	version = 3,
 	exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

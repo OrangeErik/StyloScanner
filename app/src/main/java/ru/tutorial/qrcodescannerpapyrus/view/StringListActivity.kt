@@ -302,7 +302,7 @@ class StringListActivity: AppCompatActivity() {
 
 		val listener= object: ScanningResultListener {
 			override fun onScanned(result: String) {
-				result?.let {
+				result.let {
 					val current = Date();
 					val diff = current.time - lastScan.time;
 					if(diff >= 2000){

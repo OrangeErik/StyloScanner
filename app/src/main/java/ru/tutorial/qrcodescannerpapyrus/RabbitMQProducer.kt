@@ -22,6 +22,8 @@ object RabbitConst {
 }
 
 //Routing Producer and main fun
+
+//Not Used
 class RoutingProducer(
 	host: String = RabbitConst.STANDART_HOST,
 	port: Int = RabbitConst.STANDART_PORT.toInt()) {

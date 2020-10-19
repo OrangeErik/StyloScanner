@@ -1,9 +1,6 @@
 package ru.tutorial.qrcodescannerpapyrus.viewmodels
 
-import android.app.Application
-import android.content.Intent
-import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
+
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,17 +9,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import ru.tutorial.qrcodescannerpapyrus.KtApplication
 import ru.tutorial.qrcodescannerpapyrus.data.DocHeader
-import ru.tutorial.qrcodescannerpapyrus.data.GoodsBarcodeEntity
-import ru.tutorial.qrcodescannerpapyrus.data.GoodsEntity
 import ru.tutorial.qrcodescannerpapyrus.repo.*
-import timber.log.Timber
-import java.io.File
-import java.io.FileWriter
 import java.io.InputStream
-import java.lang.Exception
 
 data class HeaderViewData(var docHeader: DocHeader, var selected:Boolean)
 
+
+//Посредник межу визуалкой и репозиториями.
 class DocHeaderViewModel(var repository: MainRepository = KtApplication.mainRepository): ViewModel() {
 	val allHeaders: LiveData<List<DocHeader>>;
 
