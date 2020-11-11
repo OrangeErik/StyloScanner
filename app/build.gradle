@@ -4,14 +4,14 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: "kotlin-kapt"
 
 android {
-    signingConfigs {
-        firstSigninigconfig {
-            storeFile file('D:\\projects\\keys\\keys_store.jks')
-            storePassword 'ican_progger'
-            keyPassword 'ican_progger'
-            keyAlias 'key_stylo_scanner'
-        }
-    }
+//    signingConfigs {
+//        firstSigninigconfig {
+//            storeFile file('D:\\projects\\keys\\keys_store.jks')
+//            storePassword 'ican_progger'
+//            keyPassword 'ican_progger'
+//            keyAlias 'key_stylo_scanner'
+//        }
+//    }
     compileSdkVersion 30
 
     defaultConfig {
@@ -23,7 +23,7 @@ android {
         multiDexEnabled true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        signingConfig signingConfigs.firstSigninigconfig
+//        signingConfig signingConfigs.firstSigninigconfig
     }
 
     buildTypes {
